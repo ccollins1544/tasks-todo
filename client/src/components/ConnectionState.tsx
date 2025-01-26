@@ -2,10 +2,19 @@ import { FC } from "react";
 
 interface ConnectionStateProps {
   isConnected: boolean;
+  socketId: string;
 }
 
-const ConnectionState: FC<ConnectionStateProps> = ({ isConnected }) => {
-  return <p>State: {"" + isConnected}</p>;
+const ConnectionState: FC<ConnectionStateProps> = ({
+  isConnected,
+  socketId,
+}) => {
+  return (
+    <p>
+      {isConnected ? "Connected" : "Not connected"}
+      {socketId ? " " + socketId : ""}
+    </p>
+  );
 };
 
 export { ConnectionState };

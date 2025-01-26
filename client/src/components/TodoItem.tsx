@@ -4,9 +4,10 @@ import { Todo } from "../api/Todo";
 interface TodoItemProps {
   item: Todo;
   onDeleteTodo: (id: string) => void;
+  disabled: boolean;
 }
 
-const TodoItem: FC<TodoItemProps> = ({ item, onDeleteTodo }) => {
+const TodoItem: FC<TodoItemProps> = ({ item, onDeleteTodo, disabled }) => {
   return (
     <ul>
       <li>id: {item.id}</li>
@@ -16,7 +17,9 @@ const TodoItem: FC<TodoItemProps> = ({ item, onDeleteTodo }) => {
       <li>{item.text}</li>
       <li>{item.notes}</li>
       <li>
-        <button onClick={onDeleteTodo.bind(null, item.id)}>DELETE</button>
+        <button onClick={onDeleteTodo.bind(null, item.id)} disabled={disabled}>
+          DELETE
+        </button>
       </li>
     </ul>
   );

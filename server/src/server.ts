@@ -1,3 +1,4 @@
+require("dotenv").config();
 import express, { Request, Response, NextFunction } from "express";
 import { Server } from "socket.io";
 const cors = require("cors");
@@ -9,18 +10,25 @@ import {
   SocketData,
   Todo,
 } from "./interfaces";
-const { createServer } = require("node:http");
+import { TodoList } from "./models/todoList";
+import todoListRoutes from "./routes/todoList";
+import {
+  getTodoListByName,
+  getTodoListById,
+  createTodoList,
+  updateTodoList,
+} from "./controllers/todoList";
 
+const { createServer } = require("node:http");
 const app = express();
 const server = createServer(app);
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+const DEFAULT_TODO_LIST_ID = process.env.TODO_LIST_ID || "list1";
+const DEFAULT_TODO_LIST_NAME = process.env.TODO_LIST_NAME || "Shared List";
 
 app.use(cors());
 app.use(json());
-
-// @todo_cc do something else here...
-app.get("/", (req: Request, res: Response) => {
-  res.send("<h1>Hello world</h1>");
-});
+app.use("/", todoListRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: err.message });
@@ -33,7 +41,7 @@ const io = new Server<
   SocketData
 >(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: CLIENT_URL,
     methods: ["GET", "POST"],
   },
 });
@@ -42,8 +50,36 @@ io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
   socket.data.socketId = socket.id;
 
+  let sharedList: TodoList | undefined;
+  sharedList = getTodoListById(DEFAULT_TODO_LIST_ID);
+  if (!sharedList) {
+    sharedList = getTodoListByName(DEFAULT_TODO_LIST_NAME);
+  }
+  if (!sharedList) {
+    sharedList = createTodoList(DEFAULT_TODO_LIST_ID, DEFAULT_TODO_LIST_NAME);
+  }
+  socket.data.todoListId = sharedList.id;
+
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`, socket.data);
+  });
+
+  // Broadcast the list to the newly connected client
+  socket.emit("receiveTodoList", sharedList);
+
+  // Todos
+  socket.on("addTodo", (todoItem: Todo) => {
+    const todoListId = socket.data.todoListId;
+    updateTodoList(todoListId, "add", todoItem);
+    socket.broadcast.emit("addTodoBroadcast", todoItem, todoListId);
+    socket.emit("addTodo", todoItem);
+  });
+
+  socket.on("deleteTodo", (todoId: string) => {
+    const todoListId = socket.data.todoListId;
+    updateTodoList(todoListId, "delete", { id: todoId } as Todo);
+    socket.broadcast.emit("deleteTodoBroadcast", todoId, todoListId);
+    socket.emit("deleteTodo", todoId);
   });
 
   // Testing
@@ -56,25 +92,8 @@ io.on("connection", (socket) => {
   // works when broadcast to all
   io.emit("noArg");
 
-  // works when broadcasting to a room
+  // works when broadcasting to a room @todo_cc revisit
   io.to("room1").emit("basicEmit", 1, "2", Buffer.from([3]));
-
-  // Todos
-  socket.on("addTodo", (todoItem: Todo) => {
-    console.log("addTodo", todoItem);
-    socket.broadcast.emit("addTodoBroadcast", todoItem);
-    socket.emit("addTodo", todoItem);
-  });
-
-  socket.on("deleteTodo", (todoId: string) => {
-    console.log("deleteTodo", todoId);
-    socket.broadcast.emit("deleteTodoBroadcast", todoId);
-    socket.emit("deleteTodo", todoId);
-  });
-
-  io.on("ping", () => {
-    console.log("ping received");
-  });
 });
 
 server.listen(3001, () => {
@@ -82,7 +101,7 @@ server.listen(3001, () => {
 });
 
 /**
- * @todo_cc incorporate typescript
+ * @todo_cc clean up 
  * https://socket.io/docs/v4/typescript/
  *
  * See links:

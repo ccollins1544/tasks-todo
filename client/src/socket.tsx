@@ -1,11 +1,6 @@
 import io, { Socket } from "socket.io-client";
 
-// @todo_cc clean up
-// "undefined" means the URL will be computed from the `window.location` object
-// const URL: string | undefined =
-//   process.env.NODE_ENV === "production" ? undefined : "http://localhost:3001";
-const URL: string = "http://localhost:3001";
-
+const URL: string = process.env.REACT_APP_SERVER_URL || "http://localhost:3001";
 const socket: typeof Socket = io(URL, {
   autoConnect: false, // By default, the Socket.IO client opens a connection to the server right away. You can prevent this behavior with the autoConnect
 });
