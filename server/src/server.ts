@@ -41,10 +41,9 @@ const io = new Server<
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
   socket.data.socketId = socket.id;
-  io.serverSideEmit("ping");
 
   socket.on("disconnect", () => {
-    console.log("user disconnected");
+    console.log(`User disconnected: ${socket.id}`, socket.data);
   });
 
   // Testing
@@ -72,10 +71,10 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("deleteTodoBroadcast", todoId);
     socket.emit("deleteTodo", todoId);
   });
-});
 
-io.on("ping", () => {
-  console.log("ping received");
+  io.on("ping", () => {
+    console.log("ping received");
+  });
 });
 
 server.listen(3001, () => {

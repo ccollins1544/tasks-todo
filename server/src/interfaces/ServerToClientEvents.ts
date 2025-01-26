@@ -9,4 +9,5 @@ export interface ServerToClientEvents {
   deleteTodoBroadcast: (todoId: string) => void;
   addTodo: (todoItem: Todo) => void;
   deleteTodo: (todoId: string) => void;
+  ping: (cb: (response: string) => void) => void;
 }
