@@ -2,9 +2,10 @@ import { FC, useRef, FormEvent } from "react";
 
 type NewTodoProps = {
   onAddTodo: (todoText: string) => void;
+  disabled: boolean;
 };
 
-const NewTodo: FC<NewTodoProps> = ({ onAddTodo }) => {
+const NewTodo: FC<NewTodoProps> = ({ onAddTodo, disabled }) => {
   const textInputRef = useRef<HTMLInputElement>(null);
 
   const SubmitTodo = (event: FormEvent) => {
@@ -20,7 +21,9 @@ const NewTodo: FC<NewTodoProps> = ({ onAddTodo }) => {
         <label htmlFor="todo-text">Task</label>
         <input type="text" id="todo-text" ref={textInputRef} />
       </div>
-      <button type="submit">Create Task</button>
+      <button type="submit" disabled={disabled}>
+        Create Task
+      </button>
     </form>
   );
 };
