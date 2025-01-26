@@ -3,11 +3,19 @@ import { Todo } from "../api/Todo";
 
 interface TodoItemProps {
   item: Todo;
-  onDeleteTodo: (id: string) => void;
   disabled: boolean;
+  onDeleteTodo: (id: string) => void;
+  onToggleImportant: (id: string, importantField: keyof Todo) => void;
+  onToggleDone: (id: string, doneField: keyof Todo) => void;
 }
 
-const TodoItem: FC<TodoItemProps> = ({ item, onDeleteTodo, disabled }) => {
+const TodoItem: FC<TodoItemProps> = ({
+  item,
+  disabled,
+  onDeleteTodo,
+  onToggleImportant,
+  onToggleDone,
+}) => {
   return (
     <ul>
       <li>id: {item.id}</li>
@@ -19,6 +27,18 @@ const TodoItem: FC<TodoItemProps> = ({ item, onDeleteTodo, disabled }) => {
       <li>
         <button onClick={onDeleteTodo.bind(null, item.id)} disabled={disabled}>
           DELETE
+        </button>
+        <button
+          onClick={onToggleImportant.bind(null, item.id, "important")}
+          disabled={disabled}
+        >
+          {item.important ? "Mark not Important" : "Mark as Important"}
+        </button>
+        <button
+          onClick={onToggleDone.bind(null, item.id, "completed")}
+          disabled={disabled}
+        >
+          {item.completed ? "Mark not Done" : "Mark as Done"}
         </button>
       </li>
     </ul>

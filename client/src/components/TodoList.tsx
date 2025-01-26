@@ -4,11 +4,19 @@ import TodoItem from "./TodoItem";
 
 interface TodoListProps {
   items: Todo[];
-  onDeleteTodo: (id: string) => void;
   disabled: boolean;
+  onDeleteTodo: (id: string) => void;
+  onToggleImportantTodo: (id: string, importantField: keyof Todo) => void;
+  onToggleDoneTodo: (id: string, doneField: keyof Todo) => void;
 }
 
-const TodoList: FC<TodoListProps> = ({ items, onDeleteTodo, disabled }) => {
+const TodoList: FC<TodoListProps> = ({
+  items,
+  disabled,
+  onDeleteTodo,
+  onToggleImportantTodo,
+  onToggleDoneTodo,
+}) => {
   return (
     <ul>
       {items.map((todo) => (
@@ -16,6 +24,8 @@ const TodoList: FC<TodoListProps> = ({ items, onDeleteTodo, disabled }) => {
           <TodoItem
             item={todo}
             onDeleteTodo={onDeleteTodo}
+            onToggleImportant={onToggleImportantTodo}
+            onToggleDone={onToggleDoneTodo}
             disabled={disabled}
           />
         </li>

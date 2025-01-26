@@ -82,6 +82,13 @@ io.on("connection", (socket) => {
     socket.emit("deleteTodo", todoId);
   });
 
+  socket.on("updateTodo", (todoItem: Todo) => {
+    const todoListId = socket.data.todoListId;
+    updateTodoList(todoListId, "update", todoItem);
+    socket.broadcast.emit("updateTodoBroadcast", todoItem, todoListId);
+    socket.emit("updateTodo", todoItem);
+  });
+
   // Testing
   socket.emit("noArg");
   socket.emit("basicEmit", 1, "2", Buffer.from([3]));
@@ -99,37 +106,3 @@ io.on("connection", (socket) => {
 server.listen(3001, () => {
   console.log("Server is running on port 3001");
 });
-
-/**
- * @todo_cc clean up 
- * https://socket.io/docs/v4/typescript/
- *
- * See links:
- * https://socket.io/how-to/use-with-react
- * https://socket.io/docs/v4/tutorial/step-4
- * https://www.youtube.com/watch?v=djMy4QsPWiI&t=664s
- *
-
-
-### **2. Productivity & Collaboration**
-
-**Task: Real-Time Task Collaboration App**
-
-**Build a simple frontend application that enables users to manage tasks in real time. Users should be able to:**
-
-1. **Add tasks to a shared list.**
-2. **Mark tasks as completed.**
-3. **Delete tasks.**
-
-**Requirements:**
-
-- **Use React for the frontend.**
-- **Use WebSockets (e.g., Socket.IO) to simulate real-time updates.**
-- **No backend is required; simulate real-time communication using a local WebSocket server.**
-
-**Bonus Points:**
-
-- **Add basic styling to make the app visually appealing.**
-- **Deploy the app to a platform like Vercel or Netlify and provide a demo link.**
-
-*/

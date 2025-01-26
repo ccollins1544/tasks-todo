@@ -7,10 +7,9 @@ import { Todo, SharedTodoList } from "./api/Todo";
 import { ConnectionState } from "./components/ConnectionState";
 import { ConnectionManager } from "./components/ConnectionManager";
 
-// @todo_cc mark tasks as complete
-// @todo_cc mark tasks as important
-// @todo_cc add notes to tasks
 // @todo_cc add styling
+// @todo_cc deploy live
+// @todo_cc add notes to tasks
 
 const App: FC = () => {
   const [sharedLists, setSharedLists] = useState<SharedTodoList[]>([]);
@@ -27,7 +26,6 @@ const App: FC = () => {
         list_id,
         deletedTodoId,
       });
-      alert("Error removing todo from list"); // @todo_cc remove after testing
       return;
     }
     setSharedLists((prev) =>
@@ -45,12 +43,30 @@ const App: FC = () => {
   const addTodoItemToList = (list_id: string, newTodo: Todo) => {
     if (!list_id || !newTodo) {
       console.error("Error adding todo to list", { list_id, newTodo });
-      alert("Error adding todo to list"); // @todo_cc remove after testing
       return;
     }
     setSharedLists((prev) =>
       prev.map((l) =>
         l.id === list_id ? { ...l, todos: [...l.todos, newTodo] } : l
+      )
+    );
+  };
+
+  const updateTodoItemInList = (list_id: string, updatedTodo: Todo) => {
+    if (!list_id || !updatedTodo) {
+      console.error("Error updating todo in list", { list_id, updatedTodo });
+      return;
+    }
+    setSharedLists((prev) =>
+      prev.map((l) =>
+        l.id === list_id
+          ? {
+              ...l,
+              todos: l.todos.map((todo) =>
+                todo.id === updatedTodo.id ? updatedTodo : todo
+              ),
+            }
+          : l
       )
     );
   };
@@ -72,13 +88,14 @@ const App: FC = () => {
     sendMessageWithTimeout("addTodo", newTodo, 5)
       .then((response) => {
         // Update sharedLists with new todo
-        const { list_id: newListId } = response as Todo;
+        const { list_id: newListId } = (response as Todo) || { list_id } || {
+            list_id: sharedLists[0]?.id,
+          };
         addTodoItemToList(newListId, response as Todo);
         setIsLoading(false);
       })
       .catch((error) => {
         console.error("addTodo error", error);
-        alert("Error adding todo"); // @todo_cc remove after testing
 
         // Remove todo from local state
         setTodos((prev) => prev.filter((todo) => todo.id !== newTodo.id));
@@ -92,6 +109,9 @@ const App: FC = () => {
 
   const todoDeleteHandler = (deletedTodoId: string) => {
     const tempTodo = todos.find((todo) => todo.id === deletedTodoId);
+    if (!tempTodo) {
+      return;
+    }
     setTodos((prev) => prev.filter((todo) => todo.id !== deletedTodoId));
 
     sendMessageWithTimeout("deleteTodo", deletedTodoId, 5)
@@ -103,13 +123,46 @@ const App: FC = () => {
       })
       .catch((error) => {
         console.error("deleteTodo error", error);
-        alert("Error deleting todo"); // @todo_cc remove after testing
 
         // Re-Add todo to local state
-        if (tempTodo) {
-          setTodos((prev) => [...prev, tempTodo]);
-          addTodoItemToList(tempTodo.list_id, tempTodo);
-        }
+        setTodos((prev) => [...prev, tempTodo]);
+        addTodoItemToList(tempTodo.list_id, tempTodo);
+        setIsLoading(false);
+
+        // Disconnect client if error
+        socket.disconnect();
+      });
+  };
+
+  const todoToggleChangesHandler = (id: string, fieldToToggle: keyof Todo) => {
+    const tempTodo = todos.find((todo) => todo.id === id) as Todo;
+    if (!tempTodo) {
+      return;
+    }
+
+    const updatedTodo = {
+      ...tempTodo,
+      [fieldToToggle]: !tempTodo[fieldToToggle],
+    };
+    setTodos((prev) =>
+      prev.map((todo) => (todo.id === id ? updatedTodo : todo))
+    );
+
+    sendMessageWithTimeout("updateTodo", updatedTodo, 5)
+      .then((updatedTodo) => {
+        // Update sharedLists with updated todo
+        const { list_id: updatedListId } = (updatedTodo as Todo) ||
+          tempTodo || { list_id: sharedLists[0]?.id };
+        updateTodoItemInList(updatedListId, updatedTodo as Todo);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error(`updateTodo as ${fieldToToggle} error`, error);
+
+        // Undo changes
+        setTodos((prev) =>
+          prev.map((todo) => (todo.id === id ? tempTodo : todo))
+        );
 
         setIsLoading(false);
 
@@ -158,9 +211,15 @@ const App: FC = () => {
     }
 
     function onAddTodoBroadcast(todo: Todo, list_id: string) {
-      // const list_id = (todo.list_id || sharedLists[0]?.id) as string;
       setTodos((prev) => [...prev, todo]);
       addTodoItemToList(list_id, todo);
+    }
+
+    function onUpdateTodoBroadcast(updatedTodo: Todo, list_id: string) {
+      setTodos((prev) =>
+        prev.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
+      );
+      updateTodoItemInList(list_id, updatedTodo);
     }
 
     function onDeleteTodoBroadcast(deletedTodoId: string, list_id: string) {
@@ -172,12 +231,14 @@ const App: FC = () => {
     socket.on("disconnect", onDisconnect);
     socket.on("receiveTodoList", initializeTodos);
     socket.on("addTodoBroadcast", onAddTodoBroadcast);
+    socket.on("updateTodoBroadcast", onUpdateTodoBroadcast);
     socket.on("deleteTodoBroadcast", onDeleteTodoBroadcast);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("addTodoBroadcast", onAddTodoBroadcast);
+      socket.off("updateTodoBroadcast", onUpdateTodoBroadcast);
       socket.off("deleteTodoBroadcast", onDeleteTodoBroadcast);
     };
   }, []);
@@ -197,6 +258,8 @@ const App: FC = () => {
           <TodoList
             items={todos}
             onDeleteTodo={todoDeleteHandler}
+            onToggleImportantTodo={todoToggleChangesHandler}
+            onToggleDoneTodo={todoToggleChangesHandler}
             disabled={isLoading || !isConnected}
           />
         </div>

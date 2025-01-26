@@ -28,13 +28,18 @@ export const updateTodoList = (
 ) => {
   const list = getTodoListById(list_id);
   if (list) {
-    if (action === "delete") {
+    if (action === "add") {
+      list.todos.push(data);
+    } else if (action === "update") {
+      const todoIndex = list.todos.findIndex((todo) => todo.id === data.id);
+      if (todoIndex !== -1) {
+        list.todos[todoIndex] = data;
+      }
+    } else if (action === "delete") {
       const todoIndex = list.todos.findIndex((todo) => todo.id === data.id);
       if (todoIndex !== -1) {
         list.todos.splice(todoIndex, 1);
       }
-    } else {
-      list.todos.push(data); // add to list
     }
     return list;
   }

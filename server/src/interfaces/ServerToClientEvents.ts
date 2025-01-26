@@ -5,8 +5,10 @@ import { TodoList } from "../models/todoList";
 export interface ServerToClientEvents {
   receiveTodoList: (todoList: TodoList) => void;
   addTodoBroadcast: (todo: Todo, todoListId: string) => void;
+  updateTodoBroadcast: (todo: Todo, todoListId: string) => void;
   deleteTodoBroadcast: (todoId: string, todoListId: string) => void;
   addTodo: (todoItem: Todo) => void;
+  updateTodo: (todoItem: Todo) => void;
   deleteTodo: (todoId: string) => void;
   noArg: () => void;
   basicEmit: (a: number, b: string, c: Buffer) => void;
