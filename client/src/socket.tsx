@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 const autoConnect = process.env.REACT_APP_SOCKET_AUTO_CONNECT
   ? process.env.REACT_APP_SOCKET_AUTO_CONNECT === "true"
   : false;
-const URL: string = process.env.REACT_APP_SERVER_URL || "http://localhost:3001";
+const URL: string = process.env.VITE_SERVER_URL || "http://localhost:3005";
 const socket: Socket = io(URL, {
   autoConnect, // By default, the Socket.IO client opens a connection to the server right away. You can prevent this behavior with the autoConnect
 });
