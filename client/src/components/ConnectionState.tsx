@@ -11,8 +11,8 @@ const ConnectionState: FC<ConnectionStateProps> = ({
 }) => {
   return (
     <p>
-      {isConnected ? "Connected" : "Not connected"}
-      {socketId ? " " + socketId : ""}
+      {isConnected ? "Connected ID " : "Not connected"}
+      {socketId ? socketId : ""}
     </p>
   );
 };

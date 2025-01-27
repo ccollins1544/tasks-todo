@@ -19,6 +19,8 @@ type TodoListsContextType = {
   isLoading: boolean;
   isConnected: boolean;
   socketId: string;
+  selectedTodoItem: Todo | null;
+  todoSelectedHandler: (todo: Todo) => void;
   todoAddHandler: (text: string) => void;
   todoDeleteHandler: (deletedTodoId: string) => void;
   todoToggleChangesHandler: (id: string, fieldToToggle: keyof Todo) => void;
@@ -30,6 +32,11 @@ const initialState: TodoListsContextType = {
   isLoading: false as boolean,
   isConnected: false as boolean,
   socketId: "" as string,
+  selectedTodoItem: {} as Todo,
+  todoSelectedHandler: (todo: Todo) => {
+    console.log("todoSelectedHandler with args", { todo });
+    throw new Error("todoSelectedHandler function must be overridden");
+  },
   todoAddHandler: (text: string): void => {
     console.log("todoAddHandler with args", { text });
     throw new Error("todoAddHandler function must be overridden");
@@ -51,6 +58,7 @@ const useTodoListsData = () =>
 const TodoListsProvider = ({ children }: Props) => {
   const [sharedLists, setSharedLists] = useState<SharedTodoList[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [selectedTodoItem, setSelectedTodoItem] = useState<Todo | null>(null);
 
   const initialized = useRef<boolean>(false);
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected);
@@ -131,6 +139,8 @@ const TodoListsProvider = ({ children }: Props) => {
   };
 
   /*==================================[ todos Functions ]===================================*/
+  const todoSelectedHandler = (TodoItem: Todo) => setSelectedTodoItem(TodoItem);
+
   /**
    * todoAddHandler
    * Add a new todo
@@ -183,6 +193,11 @@ const TodoListsProvider = ({ children }: Props) => {
     if (!tempTodo) {
       return;
     }
+
+    if (selectedTodoItem?.id === deletedTodoId) {
+      setSelectedTodoItem(null);
+    }
+
     setTodos((prev) => prev.filter((todo) => todo.id !== deletedTodoId));
 
     sendMessageWithTimeout("deleteTodo", deletedTodoId, 5)
@@ -222,6 +237,11 @@ const TodoListsProvider = ({ children }: Props) => {
       ...tempTodo,
       [fieldToToggle]: !tempTodo[fieldToToggle],
     };
+
+    if (selectedTodoItem?.id === updatedTodo.id) {
+      setSelectedTodoItem(updatedTodo);
+    }
+
     setTodos((prev) =>
       prev.map((todo) => (todo.id === id ? updatedTodo : todo))
     );
@@ -252,7 +272,7 @@ const TodoListsProvider = ({ children }: Props) => {
   useEffect(() => {
     function onConnect() {
       setIsConnected(true);
-      setSocketId(socket.id);
+      setSocketId(socket.id!);
     }
 
     function onDisconnect() {
@@ -329,6 +349,8 @@ const TodoListsProvider = ({ children }: Props) => {
         isLoading,
         isConnected,
         socketId,
+        selectedTodoItem,
+        todoSelectedHandler,
         todoAddHandler,
         todoDeleteHandler,
         todoToggleChangesHandler,

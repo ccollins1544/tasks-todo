@@ -1,14 +1,9 @@
 import { useContext, FC } from "react";
-import "./App.css";
 import NewTodo from "./components/NewTodo";
 import TodoList from "./components/TodoList";
-import { ConnectionState } from "./components/ConnectionState";
+import TodoItem from "./components/TodoItem";
 import { ConnectionManager } from "./components/ConnectionManager";
 import TodoListsContext from "./context/todoLists";
-
-// @todo_cc add styling
-// @todo_cc deploy live
-// @todo_cc add notes to tasks
 
 const App: FC = () => {
   const {
@@ -17,6 +12,8 @@ const App: FC = () => {
     isLoading,
     isConnected,
     socketId,
+    selectedTodoItem,
+    todoSelectedHandler,
     todoAddHandler,
     todoDeleteHandler,
     todoToggleChangesHandler,
@@ -24,25 +21,36 @@ const App: FC = () => {
 
   return (
     <div className="App">
-      <ConnectionState isConnected={isConnected} socketId={socketId} />
-      <ConnectionManager isConnected={isConnected} />
-      <pre>{JSON.stringify(sharedLists, null, 2)}</pre> {/* @todo_cc remove */}
-      {sharedLists.map((list) => (
-        <div key={list.id} className="todo-list">
-          <h1>{list.name}</h1>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="px-4 flex flex-col">
+          <ul className="list-disc m-4 px-4">
+            {sharedLists.map((list) => (
+              <li key={list.id} className="my-2">
+                <h2>{list.name}</h2>
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-row justify-between">
+            <ConnectionManager isConnected={isConnected} socketId={socketId} />
+          </div>
+        </div>
+        <div className="px-4 flex flex-col">
+          <TodoList items={todos} todoSelectedHandler={todoSelectedHandler} />
           <NewTodo
             onAddTodo={todoAddHandler}
-            disabled={isLoading || !isConnected}
-          />
-          <TodoList
-            items={todos}
-            onDeleteTodo={todoDeleteHandler}
-            onToggleImportantTodo={todoToggleChangesHandler}
-            onToggleDoneTodo={todoToggleChangesHandler}
-            disabled={isLoading || !isConnected}
+            disabled={!isConnected || isLoading}
           />
         </div>
-      ))}
+        <div>
+          <TodoItem
+            item={selectedTodoItem}
+            onDeleteTodo={todoDeleteHandler}
+            onToggleImportant={todoToggleChangesHandler}
+            onToggleDone={todoToggleChangesHandler}
+            disabled={!isConnected || isLoading}
+          />
+        </div>
+      </div>
     </div>
   );
 };

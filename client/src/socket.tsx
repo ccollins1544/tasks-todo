@@ -1,8 +1,11 @@
-import io, { Socket } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
+const autoConnect = process.env.REACT_APP_SOCKET_AUTO_CONNECT
+  ? process.env.REACT_APP_SOCKET_AUTO_CONNECT === "true"
+  : false;
 const URL: string = process.env.REACT_APP_SERVER_URL || "http://localhost:3001";
-const socket: typeof Socket = io(URL, {
-  autoConnect: false, // By default, the Socket.IO client opens a connection to the server right away. You can prevent this behavior with the autoConnect
+const socket: Socket = io(URL, {
+  autoConnect, // By default, the Socket.IO client opens a connection to the server right away. You can prevent this behavior with the autoConnect
 });
 
 const sendMessageWithTimeout = (
