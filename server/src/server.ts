@@ -88,19 +88,6 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("updateTodoBroadcast", todoItem, todoListId);
     socket.emit("updateTodo", todoItem);
   });
-
-  // Testing
-  socket.emit("noArg");
-  socket.emit("basicEmit", 1, "2", Buffer.from([3]));
-  socket.emit("withAck", "4", (e) => {
-    // e is inferred as number
-  });
-
-  // works when broadcast to all
-  io.emit("noArg");
-
-  // works when broadcasting to a room @todo_cc revisit
-  io.to("room1").emit("basicEmit", 1, "2", Buffer.from([3]));
 });
 
 server.listen(3001, () => {
