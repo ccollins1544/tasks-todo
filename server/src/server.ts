@@ -90,6 +90,19 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(3001, () => {
-  console.log("Server is running on port 3001");
+function normalizePort(val: string) {
+  var port = parseInt(val, 10);
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+  return false;
+}
+const serverPort = normalizePort(process.env.API_PORT || "3005");
+server.listen(serverPort, () => {
+  console.log(`🌎 Server is running on port ${serverPort}`);
 });
