@@ -5,11 +5,15 @@ import react from "@vitejs/plugin-react";
 export default ({ mode }: { mode: string }) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
   const CLIENT_PORT = Number(process.env.VITE_PORT || "3004");
+  const ALLOWED_HOSTS = process.env.VITE_ALLOWED_HOSTS
+    ? process.env.VITE_ALLOWED_HOSTS.split(",")
+    : [];
 
   return defineConfig({
     plugins: [react()],
     server: {
       port: CLIENT_PORT,
+      allowedHosts: ALLOWED_HOSTS,
     },
     define: {
       "process.env": {},
